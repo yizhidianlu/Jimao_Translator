@@ -37,8 +37,9 @@
 
 1. **Given** 用户处于语音翻译模式且麦克风权限已授予, **When** 用户按住语音按钮并说"请问附近有餐厅吗", **Then** 系统识别语音文本、翻译为目标语言并自动朗读翻译结果
 2. **Given** 语音识别完成, **When** 系统显示识别出的原文, **Then** 用户可以在翻译前确认或编辑识别文本以纠正错误
-3. **Given** 用户处于对话模式, **When** 对方用英语说话后用户按住按钮, **Then** 系统自动检测英语输入并翻译为中文朗读
-4. **Given** 环境噪音较大导致语音识别置信度低, **When** 系统完成识别, **Then** 系统标注低置信度并提示用户确认或重说
+3. **Given** 用户处于对话模式, **When** 对方用英语说话后用户按住按钮, **Then** 系统自动检测英语输入并翻译为中文朗读，界面以分屏形式展示：左侧显示我方语言内容，右侧显示对方语言内容
+4. **Given** 用户处于对话模式且已进行多轮交流, **When** 用户将屏幕转向对方, **Then** 对方可以在自己一侧清晰看到翻译结果
+5. **Given** 环境噪音较大导致语音识别置信度低, **When** 系统完成识别, **Then** 系统标注低置信度并提示用户确认或重说
 
 ---
 
@@ -70,6 +71,16 @@
 - 输入包含特殊字符（emoji、数学符号、代码片段）时，系统合理处理
 - LLM 返回异常长响应时，系统分段展示并保持界面可用
 
+## Clarifications
+
+### Session 2026-04-17
+
+- Q: 翻译文本和语音数据的隐私处理策略？ → A: 数据仅在调用外部 API 时临时传输，本地不持久化原始语音数据，翻译文本可选保留
+- Q: 是否需要跨会话的翻译历史记录功能？ → A: 保留最近 100 条翻译历史，支持浏览和重新复制，不提供全文搜索
+- Q: 翻译工具主界面以什么形式呈现？ → A: 全屏沉浸式界面，三个模式（文本/语音/聊天）通过标签页切换
+- Q: LLM 提供商策略：单一还是多提供商？ → A: 仅支持单一 LLM 提供商，用户配置一个 API key 即可使用
+- Q: 语音对话模式中双方对话内容如何展示？ → A: 分屏展示，左侧我方语言，右侧对方语言，双方可各看一侧
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -82,18 +93,27 @@
 - **FR-006**: System MUST convert recognized speech to text and display it before translating
 - **FR-007**: System MUST automatically read aloud (text-to-speech) the translated result in the target language
 - **FR-008**: System MUST allow users to edit recognized speech text before translation to correct recognition errors
-- **FR-009**: System MUST integrate with an LLM service for intelligent chat and Q&A
+- **FR-008a**: System MUST present voice conversation mode in a split-screen layout: the user's language on the left side, the counterpart's language on the right side, so each party can read their own side
+- **FR-009**: System MUST integrate with a single LLM provider for intelligent chat and Q&A; the user configures one API key to activate the service
 - **FR-010**: System MUST maintain conversation context across multiple chat turns within a session
-- **FR-011**: System MUST provide a compact, always-accessible interface that can be quickly invoked (e.g., via hotkey or system tray)
+- **FR-011**: System MUST present a full-screen immersive interface with three modes — Text Translation, Voice Translation, and LLM Chat — switchable via tab navigation
+- **FR-011a**: System MUST remember the user's last active tab and restore it on next launch
 - **FR-012**: System MUST display confidence indicators for voice recognition results
 - **FR-013**: System MUST gracefully degrade when network is unavailable, showing clear status and falling back to offline capabilities if available
 - **FR-014**: System MUST persist user preferences (preferred language pair, UI settings) across sessions
 - **FR-015**: System MUST enforce content safety policies on LLM responses
+- **FR-016**: System MUST NOT persist raw voice audio data locally after recognition is complete
+- **FR-017**: System MUST transmit user data to external APIs only for the purpose of processing the active request; no additional copies are stored remotely by the application
+- **FR-018**: System MUST allow users to opt in or out of local translation history retention
+- **FR-019**: System MUST retain the most recent 100 translation records locally when history is enabled
+- **FR-020**: System MUST allow users to browse translation history and re-copy any previous result
+- **FR-021**: System MUST automatically evict the oldest record when the 100-entry history limit is reached
 
 ### Key Entities
 
 - **Translation Request**: Represents a single translation operation; includes source text, detected or specified source language, target language, and request timestamp
 - **Translation Result**: The output of a translation; includes translated text, confidence score, alternative translations (if available), and the engine used
+- **Translation History**: A capped local collection (max 100 entries) of recent translation records; each entry references a Translation Request and its Translation Result, ordered by recency; oldest entries are automatically evicted when the limit is reached
 - **Voice Session**: A voice interaction cycle; includes raw audio reference, recognized text, recognition confidence, associated translation request, and TTS output status
 - **Chat Conversation**: An LLM chat session; includes ordered message history (user and assistant turns), session context, and token usage tracking
 - **User Preferences**: Persisted user settings; includes default language pair, UI theme, voice speed, and hotkey configuration
@@ -114,9 +134,12 @@
 
 - Users have internet connectivity for primary functionality; offline mode is a future enhancement limited to basic features
 - Target users are travelers, language learners, and professionals who need quick translations in daily scenarios
-- The application runs as a lightweight desktop tool on Windows, macOS, and Linux
+- The application runs as a full-screen immersive desktop tool on Windows, macOS, and Linux with three tab-based modes (Text, Voice, Chat)
 - Voice features require a working microphone and speakers/headphones on the user's device
-- LLM API access requires user-provided API keys; the application does not bundle or resell API access
+- LLM API access requires a single user-provided API key for one LLM provider; multi-provider support may be added in future iterations
+- The application does not bundle or resell API access
 - Mobile platform support (iOS/Android) is out of scope for this initial version
 - The initial supported languages are Chinese (Simplified), English, Japanese, and Korean; additional languages may be added in future iterations
 - Chat history is stored locally per session; cloud sync of history is out of scope for v1
+- Raw voice audio is ephemeral: deleted immediately after speech recognition completes; only recognized text is retained (if user opts in to history)
+- Translation data is transmitted to external APIs solely for processing; the application does not store data remotely beyond what the API provider retains per their own policies
