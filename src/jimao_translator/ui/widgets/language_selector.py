@@ -42,7 +42,10 @@ class LanguageSelector(QComboBox):
         self.currentIndexChanged.connect(self._emit_language_changed)
 
     def current_language(self) -> LanguageCode:
-        return self.currentData()
+        data = self.currentData()
+        if isinstance(data, LanguageCode):
+            return data
+        return LanguageCode(data)
 
     def set_language(self, code: LanguageCode) -> None:
         if code in self._codes:

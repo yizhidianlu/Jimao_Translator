@@ -11,10 +11,13 @@ import qasync
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from .llm.providers.anthropic_client import AnthropicLlmClient
+from .speech.engines.system_stt import SystemSpeechRecognizer
+from .speech.orchestrator import VoiceTranslationOrchestrator
 from .storage.history import TranslationHistoryRepository
 from .storage.preferences import PreferencesRepository
 from .translation.engines.llm_translator import LlmTranslator
 from .translation.service import TranslationService
+from .tts.engines.edge_tts_engine import EdgeTtsEngine
 from .ui.main_window import MainWindow
 
 
@@ -60,7 +63,17 @@ def main() -> int:
         history_enabled=prefs.history_enabled,
     )
 
-    window = MainWindow(translation_service=service)
+    try:
+        stt = SystemSpeechRecognizer()
+        tts = EdgeTtsEngine()
+        voice = VoiceTranslationOrchestrator(
+            recognizer=stt, translation_service=service, tts_engine=tts
+        )
+    except Exception as err:  # noqa: BLE001 — voice deps optional on first boot
+        logging.getLogger(__name__).warning("voice engines unavailable: %s", err)
+        voice = None
+
+    window = MainWindow(translation_service=service, voice_orchestrator=voice)
     window.select_tab(prefs.last_active_tab)
     window.show()
 

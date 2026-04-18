@@ -1,6 +1,6 @@
-"""T116: MainWindow — full-screen tab host (Text / Voice / Chat).
+"""T116 + T217: MainWindow — full-screen tab host (Text / Voice / Chat).
 
-US1 wires only the Text tab. Voice and Chat tabs land in Phase 4 / Phase 5.
+Text + Voice tabs wired; Chat tab lands in Phase 5.
 """
 
 from __future__ import annotations
@@ -8,8 +8,10 @@ from __future__ import annotations
 from PySide6.QtWidgets import QLabel, QMainWindow, QTabWidget, QWidget
 
 from ..models.enums import TranslationMode
+from ..speech.orchestrator import VoiceTranslationOrchestrator
 from ..translation.service import TranslationService
 from .tabs.text_tab import TextTab
+from .tabs.voice_tab import AudioProvider, VoiceTab
 
 
 def _placeholder(text: str) -> QWidget:
@@ -20,9 +22,14 @@ def _placeholder(text: str) -> QWidget:
 
 
 class MainWindow(QMainWindow):
-    """Top-level window. Keeps references to tabs so phase-4/5 can swap placeholders."""
+    """Top-level window. Keeps references to tabs so phase-5 can swap placeholders."""
 
-    def __init__(self, translation_service: TranslationService) -> None:
+    def __init__(
+        self,
+        translation_service: TranslationService,
+        voice_orchestrator: VoiceTranslationOrchestrator | None = None,
+        audio_provider: AudioProvider | None = None,
+    ) -> None:
         super().__init__()
         self.setWindowTitle("Jimao Translator")
         self.resize(960, 640)
@@ -32,7 +39,17 @@ class MainWindow(QMainWindow):
 
         self.text_tab = TextTab(service=translation_service)
         self._tabs.addTab(self.text_tab, "文本翻译")
-        self._tabs.addTab(_placeholder("语音翻译 — Phase 4"), "语音翻译")
+
+        if voice_orchestrator is not None:
+            self.voice_tab = VoiceTab(
+                voice_orchestrator=voice_orchestrator,
+                audio_provider=audio_provider,
+            )
+            self._tabs.addTab(self.voice_tab, "语音翻译")
+        else:
+            self.voice_tab = None
+            self._tabs.addTab(_placeholder("语音翻译 — 未配置"), "语音翻译")
+
         self._tabs.addTab(_placeholder("LLM 聊天 — Phase 5"), "LLM 聊天")
 
         self.setCentralWidget(self._tabs)
