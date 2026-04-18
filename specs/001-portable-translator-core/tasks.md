@@ -30,12 +30,12 @@ description: "Task list for portable-translator-core feature implementation"
 
 **Purpose**: Project scaffolding and dev tooling
 
-- [ ] T001 Create project structure (`src/jimao_translator/` 子包目录，`tests/{contract,integration,unit}/` 目录) 按 plan.md 指定布局
-- [ ] T002 Initialize Python project with `pyproject.toml`、`requirements.txt`、`requirements-dev.txt` at repo root（含 PySide6, httpx, pydantic, SpeechRecognition, sounddevice, edge-tts, anthropic, langdetect, platformdirs, keyring, qasync 依赖）
-- [ ] T003 [P] Configure Ruff lint/format in `pyproject.toml` (section `[tool.ruff]`) and add `.editorconfig`
-- [ ] T004 [P] Configure pytest in `pyproject.toml` (section `[tool.pytest.ini_options]`) with asyncio_mode=auto, coverage threshold 80%
-- [ ] T005 [P] Add `README.md` at repo root stub (项目名、简要描述、指向 quickstart.md)
-- [ ] T006 [P] Add `.gitignore` entries for `.venv/`, `dist/`, `build/`, `__pycache__/`, `.pytest_cache/`, `*.spec`
+- [X] T001 Create project structure (`src/jimao_translator/` 子包目录，`tests/{contract,integration,unit}/` 目录) 按 plan.md 指定布局
+- [X] T002 Initialize Python project with `pyproject.toml`、`requirements.txt`、`requirements-dev.txt` at repo root（含 PySide6, httpx, pydantic, SpeechRecognition, sounddevice, edge-tts, anthropic, langdetect, platformdirs, keyring, qasync 依赖）
+- [X] T003 [P] Configure Ruff lint/format in `pyproject.toml` (section `[tool.ruff]`) and add `.editorconfig`
+- [X] T004 [P] Configure pytest in `pyproject.toml` (section `[tool.pytest.ini_options]`) with asyncio_mode=auto, coverage threshold 80%
+- [X] T005 [P] Add `README.md` at repo root stub (项目名、简要描述、指向 quickstart.md)
+- [X] T006 [P] Add `.gitignore` entries for `.venv/`, `dist/`, `build/`, `__pycache__/`, `.pytest_cache/`, `*.spec`
 
 **Checkpoint**: `pip install -r requirements-dev.txt` succeeds; `pytest` and `ruff` runnable (no tests yet)
 
@@ -49,47 +49,47 @@ description: "Task list for portable-translator-core feature implementation"
 
 ### Enums & Models (Pure data — used by all stories)
 
-- [ ] T010 [P] Define `LanguageCode`, `TranslationMode`, `MessageRole` enums in `src/jimao_translator/models/enums.py`
-- [ ] T011 [P] Define `TranslationRequest` and `TranslationResult` Pydantic models in `src/jimao_translator/models/translation.py`
-- [ ] T012 [P] Define `VoiceSession` Pydantic model in `src/jimao_translator/models/voice.py`
-- [ ] T013 [P] Define `ChatMessage` and `ChatConversation` Pydantic models in `src/jimao_translator/models/chat.py`
-- [ ] T014 [P] Define `UserPreferences` Pydantic model in `src/jimao_translator/models/preferences.py`
-- [ ] T015 [P] Define `TranslationHistoryEntry` Pydantic model in `src/jimao_translator/models/translation.py`
+- [X] T010 [P] Define `LanguageCode`, `TranslationMode`, `MessageRole` enums in `src/jimao_translator/models/enums.py`
+- [X] T011 [P] Define `TranslationRequest` and `TranslationResult` Pydantic models in `src/jimao_translator/models/translation.py`
+- [X] T012 [P] Define `VoiceSession` Pydantic model in `src/jimao_translator/models/voice.py`
+- [X] T013 [P] Define `ChatMessage` and `ChatConversation` Pydantic models in `src/jimao_translator/models/chat.py`
+- [X] T014 [P] Define `UserPreferences` Pydantic model in `src/jimao_translator/models/preferences.py`
+- [X] T015 [P] Define `TranslationHistoryEntry` Pydantic model in `src/jimao_translator/models/translation.py`
 
 ### Model Tests (Foundational TDD)
 
-- [ ] T020 [P] Unit tests for enums in `tests/unit/models/test_enums.py`
-- [ ] T021 [P] Unit tests for translation models (validation, size limits) in `tests/unit/models/test_translation.py`
-- [ ] T022 [P] Unit tests for voice model in `tests/unit/models/test_voice.py`
-- [ ] T023 [P] Unit tests for chat models in `tests/unit/models/test_chat.py`
-- [ ] T024 [P] Unit tests for preferences (voice_speed clamp, defaults) in `tests/unit/models/test_preferences.py`
+- [X] T020 [P] Unit tests for enums in `tests/unit/models/test_enums.py`
+- [X] T021 [P] Unit tests for translation models (validation, size limits) in `tests/unit/models/test_translation.py`
+- [X] T022 [P] Unit tests for voice model in `tests/unit/models/test_voice.py`
+- [X] T023 [P] Unit tests for chat models in `tests/unit/models/test_chat.py`
+- [X] T024 [P] Unit tests for preferences (voice_speed clamp, defaults) in `tests/unit/models/test_preferences.py`
 
 ### Shared Exceptions
 
-- [ ] T025 Define custom exceptions (`TranslationError`, `UnsupportedLanguagePairError`, `RecognitionError`, `NoSpeechDetectedError`, `TtsError`, `LlmUnavailableError`, `AuthenticationError`, `ContentPolicyViolationError`) in `src/jimao_translator/exceptions.py`
-- [ ] T026 [P] Unit tests for exceptions (message formatting, hierarchy) in `tests/unit/test_exceptions.py`
+- [X] T025 Define custom exceptions (`TranslationError`, `UnsupportedLanguagePairError`, `RecognitionError`, `NoSpeechDetectedError`, `TtsError`, `LlmUnavailableError`, `AuthenticationError`, `ContentPolicyViolationError`) in `src/jimao_translator/exceptions.py`
+- [X] T026 [P] Unit tests for exceptions (message formatting, hierarchy) in `tests/unit/test_exceptions.py`
 
 ### Configuration & Storage Primitives
 
-- [ ] T030 Implement platform-aware paths helper (`user_data_dir()` via `platformdirs`) in `src/jimao_translator/config.py`
-- [ ] T031 [P] Implement `PreferencesRepository` (JSON load/save, keyring for API key) in `src/jimao_translator/storage/preferences.py`
-- [ ] T032 [P] Implement `TranslationHistoryRepository` (JSON, capped at 100 entries, FIFO eviction) in `src/jimao_translator/storage/history.py`
-- [ ] T033 Unit tests for `PreferencesRepository` (load missing file → defaults; API key via keyring mock) in `tests/unit/storage/test_preferences.py`
-- [ ] T034 Unit tests for `TranslationHistoryRepository` (cap at 100, eviction order, opt-out) in `tests/unit/storage/test_history.py`
+- [X] T030 Implement platform-aware paths helper (`user_data_dir()` via `platformdirs`) in `src/jimao_translator/config.py`
+- [X] T031 [P] Implement `PreferencesRepository` (JSON load/save, keyring for API key) in `src/jimao_translator/storage/preferences.py`
+- [X] T032 [P] Implement `TranslationHistoryRepository` (JSON, capped at 100 entries, FIFO eviction) in `src/jimao_translator/storage/history.py`
+- [X] T033 Unit tests for `PreferencesRepository` (load missing file → defaults; API key via keyring mock) in `tests/unit/storage/test_preferences.py`
+- [X] T034 Unit tests for `TranslationHistoryRepository` (cap at 100, eviction order, opt-out) in `tests/unit/storage/test_history.py`
 
 ### Protocol Definitions
 
-- [ ] T040 [P] Define `TranslationProvider` Protocol in `src/jimao_translator/translation/provider.py`
-- [ ] T041 [P] Define `SpeechRecognizer` Protocol in `src/jimao_translator/speech/recognizer.py`
-- [ ] T042 [P] Define `TtsEngine` Protocol in `src/jimao_translator/tts/engine.py`
-- [ ] T043 [P] Define `LlmClient` Protocol in `src/jimao_translator/llm/client.py`
+- [X] T040 [P] Define `TranslationProvider` Protocol in `src/jimao_translator/translation/provider.py`
+- [X] T041 [P] Define `SpeechRecognizer` Protocol in `src/jimao_translator/speech/recognizer.py`
+- [X] T042 [P] Define `TtsEngine` Protocol in `src/jimao_translator/tts/engine.py`
+- [X] T043 [P] Define `LlmClient` Protocol in `src/jimao_translator/llm/client.py`
 
 ### Mock Implementations (Needed by all integration tests)
 
-- [ ] T050 [P] Implement `MockTranslationProvider` in `src/jimao_translator/translation/engines/mock.py`
-- [ ] T051 [P] Implement `MockSpeechRecognizer` in `src/jimao_translator/speech/engines/mock.py`
-- [ ] T052 [P] Implement `MockTtsEngine` in `src/jimao_translator/tts/engines/mock.py`
-- [ ] T053 [P] Implement `MockLlmClient` in `src/jimao_translator/llm/providers/mock.py`
+- [X] T050 [P] Implement `MockTranslationProvider` in `src/jimao_translator/translation/engines/mock.py`
+- [X] T051 [P] Implement `MockSpeechRecognizer` in `src/jimao_translator/speech/engines/mock.py`
+- [X] T052 [P] Implement `MockTtsEngine` in `src/jimao_translator/tts/engines/mock.py`
+- [X] T053 [P] Implement `MockLlmClient` in `src/jimao_translator/llm/providers/mock.py`
 
 **Checkpoint**: Foundation ready — user story implementation can proceed.
 
@@ -104,23 +104,23 @@ description: "Task list for portable-translator-core feature implementation"
 
 ### Tests for User Story 1 (Write FIRST, ensure FAIL before implementation) ⚠️
 
-- [ ] T100 [P] [US1] Contract tests for `TranslationProvider` (8 cases from contracts/translation-provider.md) in `tests/contract/test_translation_provider.py`
-- [ ] T101 [P] [US1] Integration test: text translation end-to-end (zh→en, auto detect, copy flow) in `tests/integration/test_text_translation_flow.py`
-- [ ] T102 [P] [US1] Integration test: same-language short-circuit (zh→zh returns original) in `tests/integration/test_text_translation_flow.py`
-- [ ] T103 [P] [US1] Unit test: empty text rejection in `tests/unit/translation/test_service_validation.py`
-- [ ] T104 [P] [US1] Unit test: language detection (langdetect wrapper) in `tests/unit/translation/test_language_detection.py`
+- [X] T100 [P] [US1] Contract tests for `TranslationProvider` (8 cases from contracts/translation-provider.md) in `tests/contract/test_translation_provider.py`
+- [X] T101 [P] [US1] Integration test: text translation end-to-end (zh→en, auto detect, copy flow) in `tests/integration/test_text_translation_flow.py`
+- [X] T102 [P] [US1] Integration test: same-language short-circuit (zh→zh returns original) in `tests/integration/test_text_translation_flow.py`
+- [X] T103 [P] [US1] Unit test: empty text rejection in `tests/unit/translation/test_service_validation.py`
+- [X] T104 [P] [US1] Unit test: language detection (langdetect wrapper) in `tests/unit/translation/test_language_detection.py`
 
 ### Implementation for User Story 1
 
-- [ ] T110 [US1] Implement language detection wrapper (`detect_language(text) -> LanguageCode`) in `src/jimao_translator/translation/detection.py`
-- [ ] T111 [US1] Implement `LlmTranslator` (uses `LlmClient.translate_via_prompt`) in `src/jimao_translator/translation/engines/llm_translator.py`
-- [ ] T112 [US1] Implement `TranslationService` orchestration (validate → detect → short-circuit → call provider → record history) in `src/jimao_translator/translation/service.py`
-- [ ] T113 [US1] Implement Anthropic `LlmClient` (translate_via_prompt method only for US1) in `src/jimao_translator/llm/providers/anthropic_client.py`
-- [ ] T114 [US1] Implement UI widget: `LanguageSelector` in `src/jimao_translator/ui/widgets/language_selector.py`
-- [ ] T115 [US1] Implement UI tab: `TextTab` (input box, target language selector, translate button, result display, copy button) in `src/jimao_translator/ui/tabs/text_tab.py`
-- [ ] T116 [US1] Wire `TextTab` into `MainWindow` with tab navigation stub in `src/jimao_translator/ui/main_window.py`
-- [ ] T117 [US1] Implement app entry point `main()` (qasync + QApplication setup) in `src/jimao_translator/main.py`
-- [ ] T118 [US1] GUI test: TextTab translate flow via pytest-qt in `tests/integration/test_text_tab_ui.py`
+- [X] T110 [US1] Implement language detection wrapper (`detect_language(text) -> LanguageCode`) in `src/jimao_translator/translation/detection.py`
+- [X] T111 [US1] Implement `LlmTranslator` (uses `LlmClient.translate_via_prompt`) in `src/jimao_translator/translation/engines/llm_translator.py`
+- [X] T112 [US1] Implement `TranslationService` orchestration (validate → detect → short-circuit → call provider → record history) in `src/jimao_translator/translation/service.py`
+- [X] T113 [US1] Implement Anthropic `LlmClient` (translate_via_prompt method only for US1) in `src/jimao_translator/llm/providers/anthropic_client.py`
+- [X] T114 [US1] Implement UI widget: `LanguageSelector` in `src/jimao_translator/ui/widgets/language_selector.py`
+- [X] T115 [US1] Implement UI tab: `TextTab` (input box, target language selector, translate button, result display, copy button) in `src/jimao_translator/ui/tabs/text_tab.py`
+- [X] T116 [US1] Wire `TextTab` into `MainWindow` with tab navigation stub in `src/jimao_translator/ui/main_window.py`
+- [X] T117 [US1] Implement app entry point `main()` (qasync + QApplication setup) in `src/jimao_translator/main.py`
+- [X] T118 [US1] GUI test: TextTab translate flow via pytest-qt in `tests/integration/test_text_tab_ui.py`
 
 **Checkpoint**: User Story 1 fully functional and testable; application is MVP-ready.
 
