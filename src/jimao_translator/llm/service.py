@@ -8,7 +8,7 @@ optionally retry; no partial assistant message is persisted.
 from __future__ import annotations
 
 import logging
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from ..models.chat import ChatConversation, ChatMessage
 from ..models.enums import MessageRole

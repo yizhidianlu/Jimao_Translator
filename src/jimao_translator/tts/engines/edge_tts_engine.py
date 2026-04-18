@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from ...exceptions import TtsError, UnsupportedLanguageError
 
@@ -34,7 +35,9 @@ class EdgeTtsEngine:
 
     name: str = "edge-tts"
 
-    def __init__(self, voice_map: dict[str, str] | None = None, communicate_cls: Any | None = None) -> None:
+    def __init__(
+        self, voice_map: dict[str, str] | None = None, communicate_cls: Any | None = None
+    ) -> None:
         self._voice_map = voice_map or _VOICE_MAP
         self._communicate_cls = communicate_cls
 

@@ -7,9 +7,18 @@ We collect chunks into a QBuffer — no file is written to disk.
 from __future__ import annotations
 
 import logging
-from typing import AsyncIterator
+import os
+import sys
+from collections.abc import AsyncIterator
 
 logger = logging.getLogger(__name__)
+
+
+def _playback_disabled() -> bool:
+    # QtMultimedia + async loop crashes under pytest; allow opt-out for tests / headless CI.
+    if os.environ.get("JIMAO_DISABLE_PLAYBACK"):
+        return True
+    return "pytest" in sys.modules
 
 
 async def play_stream(audio_stream: AsyncIterator[bytes]) -> bytes:
@@ -24,11 +33,19 @@ async def play_stream(audio_stream: AsyncIterator[bytes]) -> bytes:
     async for chunk in audio_stream:
         buffer.extend(chunk)
 
+    if _playback_disabled():
+        return bytes(buffer)
+
     try:
         from PySide6.QtCore import QBuffer, QByteArray, QIODevice
         from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
+        from PySide6.QtWidgets import QApplication
     except ImportError:  # pragma: no cover — multimedia optional at test time
         logger.debug("PySide6 QtMultimedia not available; skipping playback")
+        return bytes(buffer)
+
+    if QApplication.instance() is None:
+        logger.debug("no QApplication; skipping audible playback")
         return bytes(buffer)
 
     qba = QByteArray(bytes(buffer))

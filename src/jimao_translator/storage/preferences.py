@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 from pathlib import Path
@@ -71,11 +72,7 @@ class PreferencesRepository:
         )
 
         if prefs.llm_api_key:
-            self._keyring.set_password(
-                KEYRING_SERVICE, KEYRING_USERNAME_LLM, prefs.llm_api_key
-            )
+            self._keyring.set_password(KEYRING_SERVICE, KEYRING_USERNAME_LLM, prefs.llm_api_key)
         else:
-            try:
+            with contextlib.suppress(Exception):  # keyring backends vary widely
                 self._keyring.delete_password(KEYRING_SERVICE, KEYRING_USERNAME_LLM)
-            except Exception:  # noqa: BLE001 — keyring backends vary widely
-                pass

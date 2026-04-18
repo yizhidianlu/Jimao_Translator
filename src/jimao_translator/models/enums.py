@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class LanguageCode(str, Enum):
+class LanguageCode(StrEnum):
     """Supported ISO 639-1 language codes plus `auto` for source detection."""
 
     ZH = "zh"
@@ -15,7 +15,7 @@ class LanguageCode(str, Enum):
     AUTO = "auto"
 
 
-class TranslationMode(str, Enum):
+class TranslationMode(StrEnum):
     """Which UI tab / flow produced a translation."""
 
     TEXT = "text"
@@ -23,7 +23,7 @@ class TranslationMode(str, Enum):
     VOICE_CONVERSATION = "voice_conversation"
 
 
-class MessageRole(str, Enum):
+class MessageRole(StrEnum):
     """Chat participant role."""
 
     USER = "user"

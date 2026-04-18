@@ -1,6 +1,6 @@
 """T022: Unit tests for VoiceSession."""
 
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID
 
 import pytest

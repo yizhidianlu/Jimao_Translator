@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from jimao_translator.exceptions import NoSpeechDetectedError, UnsupportedLanguageError
+from jimao_translator.exceptions import NoSpeechDetectedError
 from jimao_translator.models.enums import LanguageCode
 from jimao_translator.speech.engines.mock import MockSpeechRecognizer
 from jimao_translator.speech.recognizer import SpeechRecognizer
@@ -16,9 +16,7 @@ def recognizer() -> SpeechRecognizer:
 
 
 class TestSpeechRecognizerContract:
-    async def test_recognize_returns_voice_session(
-        self, recognizer: SpeechRecognizer
-    ) -> None:
+    async def test_recognize_returns_voice_session(self, recognizer: SpeechRecognizer) -> None:
         session = await recognizer.recognize(b"\x00" * 1024)
         assert session.recognized_text
         assert 0.0 <= session.recognition_confidence <= 1.0
@@ -82,7 +80,5 @@ class TestSpeechRecognizerContract:
             assert "audio" not in p.lower().split(os.sep)[-1]
         assert copyfile_calls == []
 
-    def test_supported_languages_includes_zh_en_ja_ko(
-        self, recognizer: SpeechRecognizer
-    ) -> None:
+    def test_supported_languages_includes_zh_en_ja_ko(self, recognizer: SpeechRecognizer) -> None:
         assert {"zh", "en", "ja", "ko"} <= recognizer.supported_languages

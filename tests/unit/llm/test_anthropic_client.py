@@ -36,14 +36,12 @@ class TestTranslateViaPrompt:
             AnthropicLlmClient(api_key="", client=_make_mock_client())
 
     async def test_sdk_authentication_error_mapped(self) -> None:
-        class AuthenticationError_sdk(Exception):
+        class FakeAuthenticationError(Exception):
             pass
 
         client = MagicMock()
         client.messages = MagicMock()
-        client.messages.create = AsyncMock(
-            side_effect=AuthenticationError_sdk("invalid api key")
-        )
+        client.messages.create = AsyncMock(side_effect=FakeAuthenticationError("invalid api key"))
         llm = AnthropicLlmClient(api_key="sk-x", client=client)
         with pytest.raises(AuthenticationError):
             await llm.translate_via_prompt("hi", "en", "zh")
@@ -70,5 +68,7 @@ class TestTranslateViaPrompt:
             await llm.translate_via_prompt("hi", "en", "zh")
 
     def test_provider_name_includes_model(self) -> None:
-        llm = AnthropicLlmClient(api_key="sk-x", model="claude-sonnet-4-5", client=_make_mock_client())
+        llm = AnthropicLlmClient(
+            api_key="sk-x", model="claude-sonnet-4-5", client=_make_mock_client()
+        )
         assert "claude-sonnet-4-5" in llm.provider_name

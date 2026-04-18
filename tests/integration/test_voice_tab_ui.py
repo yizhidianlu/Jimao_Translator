@@ -37,6 +37,7 @@ def service(tmp_path: Path) -> TranslationService:
 def _make_audio_provider(payload: bytes = b"fake-pcm"):
     async def _provider() -> bytes:
         return payload
+
     return _provider
 
 

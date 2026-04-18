@@ -44,9 +44,7 @@ class MockSpeechRecognizer:
         if language is not None and language not in _SUPPORTED:
             raise UnsupportedLanguageError(language)
 
-        source_lang = (
-            LanguageCode(language) if language in _SUPPORTED else self._detected_language
-        )
+        source_lang = LanguageCode(language) if language in _SUPPORTED else self._detected_language
 
         return VoiceSession(
             recognized_text=self._transcript,

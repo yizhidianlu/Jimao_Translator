@@ -27,7 +27,7 @@ class _FakeStreamCtx:
     def __init__(self, chunks: list[str]) -> None:
         self._chunks = chunks
 
-    async def __aenter__(self) -> "_FakeStreamCtx":
+    async def __aenter__(self) -> _FakeStreamCtx:
         return self
 
     async def __aexit__(self, *_args: object) -> None:
@@ -38,6 +38,7 @@ class _FakeStreamCtx:
         async def _gen():
             for c in self._chunks:
                 yield c
+
         return _gen()
 
 
@@ -81,6 +82,7 @@ class TestLlmClientContract:
     async def test_chat_raises_authentication_error_on_invalid_key(self) -> None:
         class _SdkAuthError(Exception):
             pass
+
         client = MagicMock()
         client.messages = MagicMock()
         client.messages.stream = MagicMock(side_effect=_SdkAuthError("invalid"))

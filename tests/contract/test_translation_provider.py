@@ -8,7 +8,6 @@ that each implementation supplies.
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
 
 import pytest
 

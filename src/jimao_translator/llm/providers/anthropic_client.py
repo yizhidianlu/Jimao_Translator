@@ -7,7 +7,8 @@ with automatic context windowing and full domain-error mapping.
 from __future__ import annotations
 
 import logging
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from ...exceptions import (
     AuthenticationError,
@@ -66,9 +67,7 @@ class AnthropicLlmClient:
         source_lang: str,
         target_lang: str,
     ) -> str:
-        system = _TRANSLATION_SYSTEM_PROMPT.format(
-            source_lang=source_lang, target_lang=target_lang
-        )
+        system = _TRANSLATION_SYSTEM_PROMPT.format(source_lang=source_lang, target_lang=target_lang)
         try:
             response = await self._client.messages.create(
                 model=self._model,

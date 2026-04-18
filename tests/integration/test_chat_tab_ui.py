@@ -20,9 +20,7 @@ def qapp() -> QApplication:
 
 
 class TestChatTabFlow:
-    async def test_send_streams_response_into_transcript(
-        self, qapp: QApplication
-    ) -> None:
+    async def test_send_streams_response_into_transcript(self, qapp: QApplication) -> None:
         svc = ChatService(llm_client=MockLlmClient(reply="你好，有什么可以帮你？", chunks=4))
         tab = ChatTab(chat_service=svc)
 
@@ -34,9 +32,7 @@ class TestChatTabFlow:
         assert "翻译 hello 成中文" in transcript
         assert "你好，有什么可以帮你？" in transcript
 
-    async def test_multi_turn_transcript_accumulates(
-        self, qapp: QApplication
-    ) -> None:
+    async def test_multi_turn_transcript_accumulates(self, qapp: QApplication) -> None:
         svc = ChatService(llm_client=MockLlmClient(reply="回答", chunks=1))
         tab = ChatTab(chat_service=svc)
 
@@ -52,9 +48,7 @@ class TestChatTabFlow:
         # Conversation state advanced too
         assert len(svc.conversation.messages) == 4
 
-    async def test_llm_unavailable_shows_fallback_hint(
-        self, qapp: QApplication
-    ) -> None:
+    async def test_llm_unavailable_shows_fallback_hint(self, qapp: QApplication) -> None:
         svc = ChatService(llm_client=MockLlmClient(fail_with=LlmUnavailableError("down")))
         tab = ChatTab(chat_service=svc)
 
@@ -64,9 +58,7 @@ class TestChatTabFlow:
         assert "不可用" in tab._status.text() or "LLM" in tab._status.text()  # noqa: SLF001
         assert "基础翻译" in tab._status.text()  # noqa: SLF001
 
-    async def test_new_conversation_clears_transcript(
-        self, qapp: QApplication
-    ) -> None:
+    async def test_new_conversation_clears_transcript(self, qapp: QApplication) -> None:
         svc = ChatService(llm_client=MockLlmClient(reply="hi", chunks=1))
         tab = ChatTab(chat_service=svc)
         tab.set_input_text("问题")

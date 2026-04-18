@@ -51,8 +51,7 @@ def main() -> int:
         QMessageBox.warning(
             None,
             "Jimao Translator",
-            "尚未配置 Anthropic API 密钥。请设置环境变量 "
-            "`ANTHROPIC_API_KEY` 或在偏好设置中填入。",
+            "尚未配置 Anthropic API 密钥。请设置环境变量 `ANTHROPIC_API_KEY` 或在偏好设置中填入。",
         )
         return 2
 
@@ -80,6 +79,8 @@ def main() -> int:
         translation_service=service,
         voice_orchestrator=voice,
         chat_service=chat_service,
+        history_repo=history_repo if prefs.history_enabled else None,
+        prefs_repo=prefs_repo,
     )
     window.select_tab(prefs.last_active_tab)
     window.show()

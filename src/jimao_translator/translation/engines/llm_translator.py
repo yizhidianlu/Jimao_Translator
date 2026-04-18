@@ -38,10 +38,7 @@ class LlmTranslator:
             if detected is LanguageCode.AUTO:
                 raise TranslationError("could not detect source language")
 
-        if (
-            detected.value not in _SUPPORTED
-            or request.target_language.value not in _SUPPORTED
-        ):
+        if detected.value not in _SUPPORTED or request.target_language.value not in _SUPPORTED:
             raise UnsupportedLanguagePairError(
                 f"{detected.value} -> {request.target_language.value} not supported"
             )

@@ -22,9 +22,7 @@ class TestTtsEngineContract:
         assert len(chunks) == 3
         assert all(isinstance(c, bytes) and len(c) > 0 for c in chunks)
 
-    async def test_synthesize_empty_text_raises_value_error(
-        self, engine: TtsEngine
-    ) -> None:
+    async def test_synthesize_empty_text_raises_value_error(self, engine: TtsEngine) -> None:
         with pytest.raises(ValueError):
             async for _ in engine.synthesize("", language="en"):
                 pass

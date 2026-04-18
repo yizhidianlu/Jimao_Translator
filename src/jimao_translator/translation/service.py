@@ -61,10 +61,7 @@ class TranslationService:
             mode=mode,
         )
 
-        if (
-            resolved_source is not LanguageCode.AUTO
-            and resolved_source is target_language
-        ):
+        if resolved_source is not LanguageCode.AUTO and resolved_source is target_language:
             result = TranslationResult(
                 request_id=request.id,
                 translated_text=source_text,
@@ -78,9 +75,7 @@ class TranslationService:
 
         if self._history_enabled:
             try:
-                self._history_repo.append(
-                    TranslationHistoryEntry(request=request, result=result)
-                )
+                self._history_repo.append(TranslationHistoryEntry(request=request, result=result))
             except Exception as err:  # noqa: BLE001 — never block translation on storage
                 logger.warning("failed to record history: %s", err)
 

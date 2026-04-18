@@ -25,7 +25,9 @@ class TestVoiceEndToEnd:
         self, history_repo: TranslationHistoryRepository
     ) -> None:
         """T202: audio bytes → recognize → translate → tts produces audio chunks."""
-        stt = MockSpeechRecognizer(transcript="你好", confidence=0.95, detected_language=LanguageCode.ZH)
+        stt = MockSpeechRecognizer(
+            transcript="你好", confidence=0.95, detected_language=LanguageCode.ZH
+        )
         svc = TranslationService(
             provider=MockTranslationProvider(),
             history_repo=history_repo,
@@ -47,9 +49,7 @@ class TestVoiceEndToEnd:
         assert outcome.session.source_language is LanguageCode.ZH
         assert len(outcome.audio_chunks) == 4
 
-    async def test_low_confidence_flagged(
-        self, history_repo: TranslationHistoryRepository
-    ) -> None:
+    async def test_low_confidence_flagged(self, history_repo: TranslationHistoryRepository) -> None:
         """T203: confidence < 0.6 surfaced as low_confidence=True."""
         stt = MockSpeechRecognizer(transcript="mumble", confidence=0.35)
         svc = TranslationService(
@@ -62,7 +62,5 @@ class TestVoiceEndToEnd:
             translation_service=svc,
             tts_engine=MockTtsEngine(),
         )
-        outcome = await orchestrator.run_once(
-            audio_bytes=b"a", target_language=LanguageCode.EN
-        )
+        outcome = await orchestrator.run_once(audio_bytes=b"a", target_language=LanguageCode.EN)
         assert outcome.low_confidence is True

@@ -76,6 +76,10 @@ markers = [
 [tool.coverage.run]
 branch = true
 source = ["src/jimao_translator"]
+omit = [
+    # Thin CLI / qasync bootstrap. Exercised manually; logic lives in testable modules.
+    "src/jimao_translator/main.py",
+]
 
 [tool.coverage.report]
 exclude_lines = [

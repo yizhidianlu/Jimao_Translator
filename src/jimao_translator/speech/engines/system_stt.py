@@ -74,9 +74,7 @@ class SystemSpeechRecognizer:
         )
 
         def _do_recognize() -> tuple[str, LanguageCode]:
-            audio_data = self._sr.AudioData(
-                wav_bytes, self._sample_rate, self._sample_width
-            )
+            audio_data = self._sr.AudioData(wav_bytes, self._sample_rate, self._sample_width)
             try:
                 text = self._recognizer.recognize_google(audio_data, language=locale)
             except self._sr.UnknownValueError as err:
@@ -94,9 +92,7 @@ class SystemSpeechRecognizer:
         )
 
 
-def _frame_as_wav(
-    pcm_bytes: bytes, sample_rate: int, sample_width: int, channels: int
-) -> bytes:
+def _frame_as_wav(pcm_bytes: bytes, sample_rate: int, sample_width: int, channels: int) -> bytes:
     """Wrap raw PCM bytes with a WAV header in memory (no disk writes)."""
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:

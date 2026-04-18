@@ -22,12 +22,8 @@ def keyring_stub() -> MagicMock:
     stub = MagicMock()
     stub.store = {}
     stub.get_password.side_effect = lambda svc, user: stub.store.get((svc, user))
-    stub.set_password.side_effect = lambda svc, user, pw: stub.store.__setitem__(
-        (svc, user), pw
-    )
-    stub.delete_password.side_effect = lambda svc, user: stub.store.pop(
-        (svc, user), None
-    )
+    stub.set_password.side_effect = lambda svc, user, pw: stub.store.__setitem__((svc, user), pw)
+    stub.delete_password.side_effect = lambda svc, user: stub.store.pop((svc, user), None)
     return stub
 
 
@@ -40,9 +36,7 @@ class TestPreferencesRepository:
         assert prefs == UserPreferences()
         assert prefs.default_source_language is LanguageCode.AUTO
 
-    def test_save_and_reload_round_trip(
-        self, prefs_file: Path, keyring_stub: MagicMock
-    ) -> None:
+    def test_save_and_reload_round_trip(self, prefs_file: Path, keyring_stub: MagicMock) -> None:
         repo = PreferencesRepository(path=prefs_file, keyring_backend=keyring_stub)
         prefs = UserPreferences(
             default_target_language=LanguageCode.JA,

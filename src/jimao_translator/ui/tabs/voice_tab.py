@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -35,6 +35,8 @@ from ...speech.orchestrator import (
     VoiceOutcome,
     VoiceTranslationOrchestrator,
 )
+from ...storage.history import TranslationHistoryRepository
+from ..widgets.history_panel import HistoryPanel
 from ..widgets.language_selector import LanguageSelector
 
 logger = logging.getLogger(__name__)
@@ -108,10 +110,12 @@ class VoiceTab(QWidget):
         default_target: LanguageCode = LanguageCode.EN,
         default_local: LanguageCode = LanguageCode.ZH,
         default_counterpart: LanguageCode = LanguageCode.EN,
+        history_repo: TranslationHistoryRepository | None = None,
     ) -> None:
         super().__init__(parent)
         self._voice = voice_orchestrator
         self._audio_provider = audio_provider or (lambda: _default_audio_provider())
+        self._history_repo = history_repo
         self._pending_task: asyncio.Task | None = None
         self._convo: ConversationOrchestrator | None = None
 
@@ -200,9 +204,24 @@ class VoiceTab(QWidget):
         header.addStretch()
         header.addWidget(self._status)
 
+        main_content = QWidget()
+        main_layout = QVBoxLayout(main_content)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addLayout(header)
+        main_layout.addWidget(self._stack, 1)
+
+        self._history_panel: HistoryPanel | None = None
         root = QVBoxLayout(self)
-        root.addLayout(header)
-        root.addWidget(self._stack, 1)
+        if self._history_repo is not None:
+            self._history_panel = HistoryPanel(self._history_repo)
+            root_splitter = QSplitter(Qt.Orientation.Horizontal)
+            root_splitter.addWidget(main_content)
+            root_splitter.addWidget(self._history_panel)
+            root_splitter.setStretchFactor(0, 3)
+            root_splitter.setStretchFactor(1, 1)
+            root.addWidget(root_splitter)
+        else:
+            root.addWidget(main_content)
 
     # ---- public API for tests --------------------------------------------------
 
@@ -302,6 +321,8 @@ class VoiceTab(QWidget):
         if outcome.low_confidence:
             status += " ⚠ 识别置信度较低"
         self._status.setText(status)
+        if self._history_panel is not None:
+            self._history_panel.refresh()
 
     # ---- conversation execution -----------------------------------------------
 
@@ -347,3 +368,5 @@ class VoiceTab(QWidget):
         if outcome.low_confidence:
             status += " ⚠ 识别置信度较低"
         self._status.setText(status)
+        if self._history_panel is not None:
+            self._history_panel.refresh()

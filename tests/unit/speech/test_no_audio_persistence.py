@@ -2,27 +2,25 @@
 
 from __future__ import annotations
 
-import gc
-import weakref
 from pathlib import Path
-
-import pytest
 
 from jimao_translator.speech.capture import AudioBuffer
 from jimao_translator.speech.engines.mock import MockSpeechRecognizer
 
 
 class TestNoAudioPersistence:
-    async def test_mock_recognizer_writes_no_audio_file(
-        self, tmp_path: Path, monkeypatch
-    ) -> None:
+    async def test_mock_recognizer_writes_no_audio_file(self, tmp_path: Path, monkeypatch) -> None:
         """Nothing resembling an audio file appears in tmp_path during recognition."""
         monkeypatch.chdir(tmp_path)
         recognizer = MockSpeechRecognizer()
         audio = b"\x00\x01\x02" * 4096
         await recognizer.recognize(audio)
 
-        leaked = list(tmp_path.rglob("*.wav")) + list(tmp_path.rglob("*.mp3")) + list(tmp_path.rglob("*.pcm"))
+        leaked = (
+            list(tmp_path.rglob("*.wav"))
+            + list(tmp_path.rglob("*.mp3"))
+            + list(tmp_path.rglob("*.pcm"))
+        )
         assert leaked == []
 
     def test_audio_buffer_clear_releases_bytes(self) -> None:

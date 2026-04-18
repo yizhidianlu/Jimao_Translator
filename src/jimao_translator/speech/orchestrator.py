@@ -22,8 +22,8 @@ from ..models.voice import VoiceSession
 
 if TYPE_CHECKING:
     from ..translation.service import TranslationService
-    from .recognizer import SpeechRecognizer
     from ..tts.engine import TtsEngine
+    from .recognizer import SpeechRecognizer
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +49,9 @@ class VoiceTranslationOrchestrator:
 
     def __init__(
         self,
-        recognizer: "SpeechRecognizer",
-        translation_service: "TranslationService",
-        tts_engine: "TtsEngine",
+        recognizer: SpeechRecognizer,
+        translation_service: TranslationService,
+        tts_engine: TtsEngine,
     ) -> None:
         self._recognizer = recognizer
         self._translation_service = translation_service

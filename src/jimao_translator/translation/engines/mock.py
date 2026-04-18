@@ -56,10 +56,7 @@ class MockTranslationProvider:
             else request.source_language
         )
 
-        if (
-            detected.value not in _SUPPORTED
-            or request.target_language.value not in _SUPPORTED
-        ):
+        if detected.value not in _SUPPORTED or request.target_language.value not in _SUPPORTED:
             raise UnsupportedLanguagePairError(
                 f"{detected.value} -> {request.target_language.value} not supported"
             )
@@ -67,11 +64,13 @@ class MockTranslationProvider:
         if self._delay:
             try:
                 await asyncio.wait_for(asyncio.sleep(self._delay), timeout=10)
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 raise TranslationError("timeout") from err
 
         key = (detected.value, request.target_language.value)
-        translated = self._table.get(key, f"[{detected.value}->{request.target_language.value}] {request.source_text}")
+        translated = self._table.get(
+            key, f"[{detected.value}->{request.target_language.value}] {request.source_text}"
+        )
 
         return TranslationResult(
             request_id=request.id,

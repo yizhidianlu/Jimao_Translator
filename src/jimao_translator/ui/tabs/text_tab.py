@@ -12,13 +12,17 @@ from PySide6.QtWidgets import (
     QLabel,
     QPlainTextEdit,
     QPushButton,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
 
 from ...exceptions import JimaoError
 from ...models.enums import LanguageCode, TranslationMode
+from ...models.translation import TranslationHistoryEntry
+from ...storage.history import TranslationHistoryRepository
 from ...translation.service import TranslationService
+from ..widgets.history_panel import HistoryPanel
 from ..widgets.language_selector import LanguageSelector
 
 logger = logging.getLogger(__name__)
@@ -34,9 +38,11 @@ class TextTab(QWidget):
         *,
         default_source: LanguageCode = LanguageCode.AUTO,
         default_target: LanguageCode = LanguageCode.EN,
+        history_repo: TranslationHistoryRepository | None = None,
     ) -> None:
         super().__init__(parent)
         self._service = service
+        self._history_repo = history_repo
         self._pending_task: asyncio.Task | None = None
 
         self._source_selector = LanguageSelector(include_auto=True, initial=default_source)
@@ -78,11 +84,27 @@ class TextTab(QWidget):
         action_row.addStretch()
         action_row.addWidget(self._status_label)
 
-        layout = QVBoxLayout(self)
-        layout.addLayout(lang_row)
-        layout.addWidget(self._input, 1)
-        layout.addLayout(action_row)
-        layout.addWidget(self._output, 1)
+        main_content = QWidget()
+        main_layout = QVBoxLayout(main_content)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addLayout(lang_row)
+        main_layout.addWidget(self._input, 1)
+        main_layout.addLayout(action_row)
+        main_layout.addWidget(self._output, 1)
+
+        self._history_panel: HistoryPanel | None = None
+        outer_layout = QVBoxLayout(self)
+        if self._history_repo is not None:
+            self._history_panel = HistoryPanel(self._history_repo)
+            self._history_panel.entry_selected.connect(self._on_history_selected)
+            splitter = QSplitter(Qt.Orientation.Horizontal)
+            splitter.addWidget(main_content)
+            splitter.addWidget(self._history_panel)
+            splitter.setStretchFactor(0, 3)
+            splitter.setStretchFactor(1, 1)
+            outer_layout.addWidget(splitter)
+        else:
+            outer_layout.addWidget(main_content)
 
     # ---- public API for tests ---------------------------------------------
 
@@ -110,9 +132,7 @@ class TextTab(QWidget):
         self._status_label.setText("翻译中 …")
 
         loop = asyncio.get_event_loop()
-        task = loop.create_task(
-            self._run_translation(source_text, source_lang, target_lang)
-        )
+        task = loop.create_task(self._run_translation(source_text, source_lang, target_lang))
         self._pending_task = task
         return task
 
@@ -132,6 +152,8 @@ class TextTab(QWidget):
             self._output.setPlainText(result.translated_text)
             self._status_label.setText(f"引擎: {result.engine}")
             self._copy_btn.setEnabled(bool(result.translated_text))
+            if self._history_panel is not None:
+                self._history_panel.refresh()
         except ValueError as err:
             self._status_label.setText(f"输入无效: {err}")
             self._copy_btn.setEnabled(False)
@@ -148,3 +170,12 @@ class TextTab(QWidget):
             clipboard = QGuiApplication.clipboard()
             clipboard.setText(text)
             self._status_label.setText("已复制")
+
+    def _on_history_selected(self, entry: TranslationHistoryEntry) -> None:
+        """Populate input from a history entry — the user can edit and re-translate."""
+        self._input.setPlainText(entry.request.source_text)
+        self._output.setPlainText(entry.result.translated_text)
+        self._source_selector.set_language(entry.request.source_language)
+        self._target_selector.set_language(entry.request.target_language)
+        self._copy_btn.setEnabled(bool(entry.result.translated_text))
+        self._status_label.setText(f"历史 · 引擎: {entry.result.engine}")

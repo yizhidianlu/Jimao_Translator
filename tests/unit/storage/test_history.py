@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 
@@ -22,7 +21,9 @@ def history_file(tmp_path: Path) -> Path:
     return tmp_path / "history.json"
 
 
-def _make_entry(offset_seconds: int, target: LanguageCode = LanguageCode.EN) -> TranslationHistoryEntry:
+def _make_entry(
+    offset_seconds: int, target: LanguageCode = LanguageCode.EN
+) -> TranslationHistoryEntry:
     created = datetime.now(UTC) + timedelta(seconds=offset_seconds)
     req = TranslationRequest(
         source_text=f"text-{offset_seconds}",
