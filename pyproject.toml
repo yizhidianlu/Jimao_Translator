@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jimao-translator"
+version = "0.1.0"
+description = "Portable desktop translator with text, voice, and LLM chat (Chinese/English/Japanese/Korean)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Jimao Translator Team" }]
+dependencies = [
+    "PySide6>=6.6",
+    "httpx>=0.27",
+    "pydantic>=2.6",
+    "SpeechRecognition>=3.10",
+    "sounddevice>=0.4.6",
+    "edge-tts>=6.1",
+    "anthropic>=0.34",
+    "langdetect>=1.0.9",
+    "platformdirs>=4.2",
+    "keyring>=24.3",
+    "qasync>=0.27",
+]
+
+[project.scripts]
+jimao-translator = "jimao_translator.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+jimao_translator = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "SIM", # flake8-simplify
+]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=jimao_translator",
+    "--cov-report=term-missing",
+    # --cov-fail-under=80 is enforced at T450 (final gate), not per-phase.
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "gui: marks tests requiring a Qt event loop",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src/jimao_translator"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]
