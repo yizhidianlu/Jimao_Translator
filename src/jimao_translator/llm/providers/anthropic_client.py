@@ -1,7 +1,7 @@
-"""T113: Anthropic LlmClient — Claude-based chat + translation backend.
+"""T113 + T310: Anthropic LlmClient — Claude-based chat + translation backend.
 
-For US1 (MVP) only `translate_via_prompt` is needed. `chat()` is implemented but
-deferred in tests until Phase 5 US3 extends it with streaming + error mapping.
+Phase 3 used `translate_via_prompt` only. Phase 5 US3 adds streaming `chat()`
+with automatic context windowing and full domain-error mapping.
 """
 
 from __future__ import annotations
@@ -16,11 +16,13 @@ from ...exceptions import (
 )
 from ...models.chat import ChatConversation
 from ...models.enums import MessageRole
+from ..context import trim_conversation
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "claude-sonnet-4-5"
 DEFAULT_MAX_TOKENS = 2048
+DEFAULT_MAX_MESSAGES_WINDOW = 40
 
 _TRANSLATION_SYSTEM_PROMPT = (
     "You are a professional translator. Translate the user's text faithfully "
@@ -37,12 +39,16 @@ class AnthropicLlmClient:
         api_key: str,
         model: str = DEFAULT_MODEL,
         max_tokens: int = DEFAULT_MAX_TOKENS,
+        system_prompt: str | None = None,
+        max_messages_window: int = DEFAULT_MAX_MESSAGES_WINDOW,
         client: Any | None = None,
     ) -> None:
         if not api_key:
             raise AuthenticationError("Anthropic API key is missing")
         self._model = model
         self._max_tokens = max_tokens
+        self._system_prompt = system_prompt
+        self._max_messages_window = max_messages_window
         if client is not None:
             self._client = client
         else:
@@ -83,25 +89,27 @@ class AnthropicLlmClient:
         if not conversation.messages or conversation.messages[-1].role is not MessageRole.USER:
             raise ValueError("last message must have role='user'")
 
-        payload_messages = [
-            {"role": m.role.value, "content": m.content} for m in conversation.messages
-        ]
+        payload_messages = trim_conversation(
+            conversation,
+            max_messages=self._max_messages_window,
+            system_prompt=None,  # Anthropic takes `system=` separately.
+        )
+
+        kwargs: dict[str, Any] = dict(
+            model=self._model,
+            max_tokens=self._max_tokens,
+            messages=payload_messages,
+        )
+        if self._system_prompt:
+            kwargs["system"] = self._system_prompt
 
         try:
             if stream:
-                async with self._client.messages.stream(
-                    model=self._model,
-                    max_tokens=self._max_tokens,
-                    messages=payload_messages,
-                ) as response:
+                async with self._client.messages.stream(**kwargs) as response:
                     async for chunk in response.text_stream:
                         yield chunk
             else:
-                response = await self._client.messages.create(
-                    model=self._model,
-                    max_tokens=self._max_tokens,
-                    messages=payload_messages,
-                )
+                response = await self._client.messages.create(**kwargs)
                 yield self._extract_text(response)
         except Exception as err:  # noqa: BLE001
             self._raise_mapped(err)

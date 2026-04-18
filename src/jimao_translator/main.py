@@ -11,6 +11,7 @@ import qasync
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from .llm.providers.anthropic_client import AnthropicLlmClient
+from .llm.service import DEFAULT_SYSTEM_PROMPT, ChatService
 from .speech.engines.system_stt import SystemSpeechRecognizer
 from .speech.orchestrator import VoiceTranslationOrchestrator
 from .storage.history import TranslationHistoryRepository
@@ -55,13 +56,15 @@ def main() -> int:
         )
         return 2
 
-    llm_client = AnthropicLlmClient(api_key=api_key)
-    translator = LlmTranslator(llm_client)
+    translator_llm = AnthropicLlmClient(api_key=api_key)
+    chat_llm = AnthropicLlmClient(api_key=api_key, system_prompt=DEFAULT_SYSTEM_PROMPT)
+    translator = LlmTranslator(translator_llm)
     service = TranslationService(
         provider=translator,
         history_repo=history_repo,
         history_enabled=prefs.history_enabled,
     )
+    chat_service = ChatService(llm_client=chat_llm)
 
     try:
         stt = SystemSpeechRecognizer()
@@ -73,7 +76,11 @@ def main() -> int:
         logging.getLogger(__name__).warning("voice engines unavailable: %s", err)
         voice = None
 
-    window = MainWindow(translation_service=service, voice_orchestrator=voice)
+    window = MainWindow(
+        translation_service=service,
+        voice_orchestrator=voice,
+        chat_service=chat_service,
+    )
     window.select_tab(prefs.last_active_tab)
     window.show()
 

@@ -1,15 +1,14 @@
-"""T116 + T217: MainWindow — full-screen tab host (Text / Voice / Chat).
-
-Text + Voice tabs wired; Chat tab lands in Phase 5.
-"""
+"""T116 + T217 + T314: MainWindow — full-screen tab host (Text / Voice / Chat)."""
 
 from __future__ import annotations
 
 from PySide6.QtWidgets import QLabel, QMainWindow, QTabWidget, QWidget
 
+from ..llm.service import ChatService
 from ..models.enums import TranslationMode
 from ..speech.orchestrator import VoiceTranslationOrchestrator
 from ..translation.service import TranslationService
+from .tabs.chat_tab import ChatTab
 from .tabs.text_tab import TextTab
 from .tabs.voice_tab import AudioProvider, VoiceTab
 
@@ -28,6 +27,7 @@ class MainWindow(QMainWindow):
         self,
         translation_service: TranslationService,
         voice_orchestrator: VoiceTranslationOrchestrator | None = None,
+        chat_service: ChatService | None = None,
         audio_provider: AudioProvider | None = None,
     ) -> None:
         super().__init__()
@@ -50,7 +50,12 @@ class MainWindow(QMainWindow):
             self.voice_tab = None
             self._tabs.addTab(_placeholder("语音翻译 — 未配置"), "语音翻译")
 
-        self._tabs.addTab(_placeholder("LLM 聊天 — Phase 5"), "LLM 聊天")
+        if chat_service is not None:
+            self.chat_tab = ChatTab(chat_service=chat_service)
+            self._tabs.addTab(self.chat_tab, "LLM 聊天")
+        else:
+            self.chat_tab = None
+            self._tabs.addTab(_placeholder("LLM 聊天 — 未配置"), "LLM 聊天")
 
         self.setCentralWidget(self._tabs)
 
