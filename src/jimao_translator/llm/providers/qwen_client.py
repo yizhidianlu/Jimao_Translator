@@ -1,7 +1,8 @@
-"""T113 + T310: Anthropic LlmClient — Claude-based chat + translation backend.
+"""QwenLlmClient — Qwen3 via Alibaba DashScope OpenAI-compatible endpoint.
 
-Phase 3 used `translate_via_prompt` only. Phase 5 US3 adds streaming `chat()`
-with automatic context windowing and full domain-error mapping.
+Replaces the Anthropic backend. Uses the `openai` Python SDK pointed at
+`https://dashscope.aliyuncs.com/compatible-mode/v1`, which DashScope
+exposes as a drop-in OpenAI Chat Completions API.
 """
 
 from __future__ import annotations
@@ -21,9 +22,10 @@ from ..context import trim_conversation
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "claude-sonnet-4-5"
+DEFAULT_MODEL = "qwen-plus"
 DEFAULT_MAX_TOKENS = 2048
 DEFAULT_MAX_MESSAGES_WINDOW = 40
+DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 _TRANSLATION_SYSTEM_PROMPT = (
     "You are a professional translator. Translate the user's text faithfully "
@@ -32,8 +34,8 @@ _TRANSLATION_SYSTEM_PROMPT = (
 )
 
 
-class AnthropicLlmClient:
-    """LlmClient implementation backed by the Anthropic Messages API."""
+class QwenLlmClient:
+    """LlmClient implementation backed by DashScope's OpenAI-compatible endpoint."""
 
     def __init__(
         self,
@@ -42,10 +44,11 @@ class AnthropicLlmClient:
         max_tokens: int = DEFAULT_MAX_TOKENS,
         system_prompt: str | None = None,
         max_messages_window: int = DEFAULT_MAX_MESSAGES_WINDOW,
+        base_url: str = DASHSCOPE_BASE_URL,
         client: Any | None = None,
     ) -> None:
         if not api_key:
-            raise AuthenticationError("Anthropic API key is missing")
+            raise AuthenticationError("DashScope API key is missing")
         self._model = model
         self._max_tokens = max_tokens
         self._system_prompt = system_prompt
@@ -53,13 +56,13 @@ class AnthropicLlmClient:
         if client is not None:
             self._client = client
         else:
-            from anthropic import AsyncAnthropic
+            from openai import AsyncOpenAI
 
-            self._client = AsyncAnthropic(api_key=api_key)
+            self._client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
     @property
     def provider_name(self) -> str:
-        return f"anthropic:{self._model}"
+        return f"qwen:{self._model}"
 
     async def translate_via_prompt(
         self,
@@ -69,11 +72,13 @@ class AnthropicLlmClient:
     ) -> str:
         system = _TRANSLATION_SYSTEM_PROMPT.format(source_lang=source_lang, target_lang=target_lang)
         try:
-            response = await self._client.messages.create(
+            response = await self._client.chat.completions.create(
                 model=self._model,
                 max_tokens=self._max_tokens,
-                system=system,
-                messages=[{"role": "user", "content": text}],
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": text},
+                ],
             )
         except Exception as err:  # noqa: BLE001
             self._raise_mapped(err)
@@ -88,44 +93,62 @@ class AnthropicLlmClient:
         if not conversation.messages or conversation.messages[-1].role is not MessageRole.USER:
             raise ValueError("last message must have role='user'")
 
-        payload_messages = trim_conversation(
+        payload_messages: list[dict[str, str]] = trim_conversation(
             conversation,
             max_messages=self._max_messages_window,
-            system_prompt=None,  # Anthropic takes `system=` separately.
-        )
-
-        kwargs: dict[str, Any] = dict(
-            model=self._model,
-            max_tokens=self._max_tokens,
-            messages=payload_messages,
+            system_prompt=None,
         )
         if self._system_prompt:
-            kwargs["system"] = self._system_prompt
+            payload_messages = [
+                {"role": "system", "content": self._system_prompt},
+                *payload_messages,
+            ]
 
         try:
             if stream:
-                async with self._client.messages.stream(**kwargs) as response:
-                    async for chunk in response.text_stream:
-                        yield chunk
+                response = await self._client.chat.completions.create(
+                    model=self._model,
+                    max_tokens=self._max_tokens,
+                    messages=payload_messages,
+                    stream=True,
+                )
+                async for chunk in response:
+                    delta = self._extract_delta(chunk)
+                    if delta:
+                        yield delta
             else:
-                response = await self._client.messages.create(**kwargs)
+                response = await self._client.chat.completions.create(
+                    model=self._model,
+                    max_tokens=self._max_tokens,
+                    messages=payload_messages,
+                )
                 yield self._extract_text(response)
         except Exception as err:  # noqa: BLE001
             self._raise_mapped(err)
 
     @staticmethod
     def _extract_text(response: Any) -> str:
-        parts = getattr(response, "content", None) or []
-        chunks: list[str] = []
-        for part in parts:
-            text = getattr(part, "text", None)
-            if text:
-                chunks.append(text)
-        return "".join(chunks)
+        choices = getattr(response, "choices", None) or []
+        if not choices:
+            return ""
+        message = getattr(choices[0], "message", None)
+        if message is None:
+            return ""
+        return getattr(message, "content", "") or ""
+
+    @staticmethod
+    def _extract_delta(chunk: Any) -> str:
+        choices = getattr(chunk, "choices", None) or []
+        if not choices:
+            return ""
+        delta = getattr(choices[0], "delta", None)
+        if delta is None:
+            return ""
+        return getattr(delta, "content", "") or ""
 
     @staticmethod
     def _raise_mapped(err: Exception) -> None:
-        """Map Anthropic SDK errors to our domain exception hierarchy."""
+        """Map OpenAI SDK errors (raised by DashScope) to domain exceptions."""
         name = err.__class__.__name__
         message = str(err) or name
 

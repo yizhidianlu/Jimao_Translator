@@ -59,7 +59,7 @@
 | 内存 < 500MB | 依赖 psutil 探测；不可用时 skip | `test_performance.py::test_process_memory_under_500mb` |
 | 离线基础翻译 | `OfflineBanner` + `MockTranslationProvider` / 本地缓存回退 | `test_history_panel_ui.py::TestOfflineBanner` |
 | 跨平台 | `platformdirs` 选择用户数据目录；CI 矩阵覆盖 Ubuntu/macOS/Windows | `.github/workflows/build.yml` |
-| 超时与降级 | `AnthropicLlmClient` 错误映射到 `LlmUnavailableError` → UI 降级 | `test_anthropic_client.py::test_sdk_*_error_mapped` |
+| 超时与降级 | `QwenLlmClient` 错误映射到 `LlmUnavailableError` → UI 降级 | `test_qwen_client.py::test_*_error_mapped` |
 
 ## 5. Development Workflow
 

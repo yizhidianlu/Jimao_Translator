@@ -1,4 +1,4 @@
-"""Unit test for AnthropicLlmClient: translate_via_prompt returns content and maps errors."""
+"""Unit test for QwenLlmClient: translate_via_prompt returns content and maps errors."""
 
 from __future__ import annotations
 
@@ -12,37 +12,41 @@ from jimao_translator.exceptions import (
     ContentPolicyViolationError,
     LlmUnavailableError,
 )
-from jimao_translator.llm.providers.anthropic_client import AnthropicLlmClient
+from jimao_translator.llm.providers.qwen_client import QwenLlmClient
 
 
 def _make_mock_client(text: str = "Hello") -> MagicMock:
-    response = SimpleNamespace(content=[SimpleNamespace(text=text)])
+    response = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=text))])
     client = MagicMock()
-    client.messages = MagicMock()
-    client.messages.create = AsyncMock(return_value=response)
+    client.chat = MagicMock()
+    client.chat.completions = MagicMock()
+    client.chat.completions.create = AsyncMock(return_value=response)
     return client
 
 
 class TestTranslateViaPrompt:
     async def test_returns_stripped_text(self) -> None:
         client = _make_mock_client("  Hello  ")
-        llm = AnthropicLlmClient(api_key="sk-test", client=client)
+        llm = QwenLlmClient(api_key="sk-test", client=client)
         result = await llm.translate_via_prompt("你好", "zh", "en")
         assert result == "Hello"
-        client.messages.create.assert_awaited_once()
+        client.chat.completions.create.assert_awaited_once()
 
     async def test_rejects_missing_api_key(self) -> None:
         with pytest.raises(AuthenticationError):
-            AnthropicLlmClient(api_key="", client=_make_mock_client())
+            QwenLlmClient(api_key="", client=_make_mock_client())
 
     async def test_sdk_authentication_error_mapped(self) -> None:
         class FakeAuthenticationError(Exception):
             pass
 
         client = MagicMock()
-        client.messages = MagicMock()
-        client.messages.create = AsyncMock(side_effect=FakeAuthenticationError("invalid api key"))
-        llm = AnthropicLlmClient(api_key="sk-x", client=client)
+        client.chat = MagicMock()
+        client.chat.completions = MagicMock()
+        client.chat.completions.create = AsyncMock(
+            side_effect=FakeAuthenticationError("invalid api key")
+        )
+        llm = QwenLlmClient(api_key="sk-x", client=client)
         with pytest.raises(AuthenticationError):
             await llm.translate_via_prompt("hi", "en", "zh")
 
@@ -51,24 +55,25 @@ class TestTranslateViaPrompt:
             pass
 
         client = MagicMock()
-        client.messages = MagicMock()
-        client.messages.create = AsyncMock(
+        client.chat = MagicMock()
+        client.chat.completions = MagicMock()
+        client.chat.completions.create = AsyncMock(
             side_effect=PermissionDeniedError("blocked by content_policy")
         )
-        llm = AnthropicLlmClient(api_key="sk-x", client=client)
+        llm = QwenLlmClient(api_key="sk-x", client=client)
         with pytest.raises(ContentPolicyViolationError):
             await llm.translate_via_prompt("hi", "en", "zh")
 
     async def test_generic_sdk_error_mapped_to_unavailable(self) -> None:
         client = MagicMock()
-        client.messages = MagicMock()
-        client.messages.create = AsyncMock(side_effect=RuntimeError("connection reset"))
-        llm = AnthropicLlmClient(api_key="sk-x", client=client)
+        client.chat = MagicMock()
+        client.chat.completions = MagicMock()
+        client.chat.completions.create = AsyncMock(side_effect=RuntimeError("connection reset"))
+        llm = QwenLlmClient(api_key="sk-x", client=client)
         with pytest.raises(LlmUnavailableError):
             await llm.translate_via_prompt("hi", "en", "zh")
 
     def test_provider_name_includes_model(self) -> None:
-        llm = AnthropicLlmClient(
-            api_key="sk-x", model="claude-sonnet-4-5", client=_make_mock_client()
-        )
-        assert "claude-sonnet-4-5" in llm.provider_name
+        llm = QwenLlmClient(api_key="sk-x", model="qwen-max", client=_make_mock_client())
+        assert "qwen-max" in llm.provider_name
+        assert llm.provider_name.startswith("qwen:")

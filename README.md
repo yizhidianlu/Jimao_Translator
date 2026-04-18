@@ -6,7 +6,7 @@
 
 - **文本翻译** — 输入文本一键翻译，支持 `auto` 识别源语言、目标文本自动拷贝。
 - **语音翻译** — 按住说话 → 识别 → 翻译 → 语音播报；对话模式下左右分屏呈现双方语言。
-- **LLM 聊天** — 基于 Anthropic Claude 的多轮对话，流式输出，可讨论翻译/语法/语境问题。
+- **LLM 聊天** — 基于通义千问（Qwen3）的多轮对话，流式输出，可讨论翻译/语法/语境问题。
 - **历史记录** — 本地 JSON 持久化；面板支持查看 / 复制 / 清空。
 - **偏好设置** — 界面偏好、语速、热键、API Key（系统 keyring）统一管理。
 
@@ -21,7 +21,7 @@ source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -e ".[dev]" || pip install -e .
 
 # 3. 配置 API Key（运行后在 "偏好设置 …" 中填入，存储到系统 keyring）
-export ANTHROPIC_API_KEY=sk-...   # 可选：初次启动前也可通过环境变量注入
+export DASHSCOPE_API_KEY=sk-...   # 可选：初次启动前也可通过环境变量注入
 
 # 4. 启动
 jimao-translator
@@ -72,7 +72,7 @@ CI 构建模板见 [.github/workflows/build.yml](.github/workflows/build.yml)。
 
 ## 技术栈
 
-Python 3.11+ · PySide6 · httpx · Pydantic · SpeechRecognition · edge-tts · Anthropic Claude · qasync · keyring
+Python 3.11+ · PySide6 · httpx · Pydantic · SpeechRecognition · edge-tts · 通义千问 Qwen3（DashScope 兼容 OpenAI 接口） · qasync · keyring
 
 ## 许可
 

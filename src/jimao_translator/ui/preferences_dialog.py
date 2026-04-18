@@ -82,7 +82,7 @@ class PreferencesDialog(QDialog):
         form.addRow("语音速率", self._voice_speed)
         form.addRow("全局热键", self._hotkey)
         form.addRow("", self._history_enabled)
-        form.addRow("Anthropic API 密钥", self._api_key)
+        form.addRow("通义千问 API 密钥", self._api_key)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel

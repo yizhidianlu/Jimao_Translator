@@ -14,7 +14,7 @@ block_cipher = None
 
 hidden_imports = []
 hidden_imports += collect_submodules("edge_tts")
-hidden_imports += collect_submodules("anthropic")
+hidden_imports += collect_submodules("openai")
 hidden_imports += collect_submodules("speech_recognition")
 
 datas = []

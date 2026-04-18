@@ -9,7 +9,7 @@ from platformdirs import user_data_dir
 APP_NAME = "JimaoTranslator"
 APP_AUTHOR = "Jimao"
 KEYRING_SERVICE = "jimao-translator"
-KEYRING_USERNAME_LLM = "anthropic-api-key"
+KEYRING_USERNAME_LLM = "dashscope-api-key"
 
 
 def user_data_path() -> Path:

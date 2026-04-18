@@ -23,7 +23,7 @@ class TranslationProvider(Protocol):
 
     @property
     def name(self) -> str:
-        """Unique engine identifier (e.g., 'claude-sonnet-4-6')."""
+        """Unique engine identifier (e.g., 'qwen-plus')."""
         ...
 
     @property

@@ -25,7 +25,7 @@ def format_error(err: Exception) -> tuple[str, str]:
     if isinstance(err, AuthenticationError):
         return (
             "API 认证失败",
-            "Anthropic API 密钥无效或缺失。请在“偏好设置”中更新密钥后重试。",
+            "通义千问 API 密钥无效或缺失。请在“偏好设置”中更新密钥后重试。",
         )
     if isinstance(err, ContentPolicyViolationError):
         return (

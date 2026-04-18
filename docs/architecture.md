@@ -64,7 +64,7 @@ Storage (JSON + keyring)
 ## 错误策略
 
 1. **领域异常层** — `exceptions.py` 定义 `JimaoError` 及其子类（`AuthenticationError`、`LlmUnavailableError`、`ContentPolicyViolationError`、`NoSpeechDetectedError`、`RecognitionError`、`TtsError`、`UnsupportedLanguageError`、`TranslationError`）。
-2. **Provider 适配** — 外部 SDK 异常按类名 / 消息映射到领域异常（见 `AnthropicLlmClient._raise_mapped`）。
+2. **Provider 适配** — 外部 SDK 异常按类名 / 消息映射到领域异常（见 `QwenLlmClient._raise_mapped`）。
 3. **UI 呈现** — `ui/error_dialog.format_error(err)` 将领域异常翻译为中文用户消息；`show_error(err, parent)` 弹出 `QMessageBox`。
 4. **优雅降级** — 网络不可用时显示 `OfflineBanner`，基础翻译（mock / 本地缓存）仍可用。
 

@@ -10,7 +10,7 @@ import sys
 import qasync
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from .llm.providers.anthropic_client import AnthropicLlmClient
+from .llm.providers.qwen_client import QwenLlmClient
 from .llm.service import DEFAULT_SYSTEM_PROMPT, ChatService
 from .speech.engines.system_stt import SystemSpeechRecognizer
 from .speech.orchestrator import VoiceTranslationOrchestrator
@@ -30,7 +30,7 @@ def _setup_logging() -> None:
 
 
 def _get_api_key(prefs_repo: PreferencesRepository) -> str | None:
-    env_key = os.environ.get("ANTHROPIC_API_KEY")
+    env_key = os.environ.get("DASHSCOPE_API_KEY")
     if env_key:
         return env_key
     return prefs_repo.load().llm_api_key
@@ -51,12 +51,12 @@ def main() -> int:
         QMessageBox.warning(
             None,
             "Jimao Translator",
-            "尚未配置 Anthropic API 密钥。请设置环境变量 `ANTHROPIC_API_KEY` 或在偏好设置中填入。",
+            "尚未配置通义千问 API 密钥。请设置环境变量 `DASHSCOPE_API_KEY` 或在偏好设置中填入。",
         )
         return 2
 
-    translator_llm = AnthropicLlmClient(api_key=api_key)
-    chat_llm = AnthropicLlmClient(api_key=api_key, system_prompt=DEFAULT_SYSTEM_PROMPT)
+    translator_llm = QwenLlmClient(api_key=api_key)
+    chat_llm = QwenLlmClient(api_key=api_key, system_prompt=DEFAULT_SYSTEM_PROMPT)
     translator = LlmTranslator(translator_llm)
     service = TranslationService(
         provider=translator,

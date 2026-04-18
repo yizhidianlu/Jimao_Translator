@@ -8,7 +8,7 @@
 - Python 3.11 或更高版本
 - Git
 - 可访问互联网（用于翻译/STT/TTS/LLM API）
-- Anthropic API 密钥（用于 LLM 和翻译后端）
+- 通义千问（DashScope）API 密钥（用于 LLM 和翻译后端）
 
 ## 初始化
 
@@ -30,14 +30,14 @@ pip install pytest pytest-asyncio pytest-cov pytest-qt ruff psutil
 
 ## 配置 API 密钥
 
-首次启动时，应用会提示配置 Anthropic API 密钥。
+首次启动时，应用会提示配置通义千问 API 密钥。
 或预先通过环境变量设置：
 
 ```bash
 # Windows (PowerShell):
-$env:ANTHROPIC_API_KEY = "sk-ant-..."
+$env:DASHSCOPE_API_KEY = "sk-..."
 # macOS / Linux:
-export ANTHROPIC_API_KEY="sk-ant-..."
+export DASHSCOPE_API_KEY="sk-..."
 ```
 
 密钥首次使用后会被保存至系统 keyring，之后无需重复输入。
@@ -55,7 +55,7 @@ python -m jimao_translator.main
 1. 默认进入 **Text Translation** 标签页
 2. 输入中文文本，选择目标语言为英语 → 立即看到译文
 3. 切换到 **Voice Translation** 标签页 → 按住麦克风按钮说话
-4. 切换到 **LLM Chat** 标签页 → 与 Claude 对话
+4. 切换到 **LLM Chat** 标签页 → 与 Qwen 对话
 
 ## 运行测试
 
@@ -117,7 +117,7 @@ pyinstaller packaging/jimao_translator.spec
 
 | 症状 | 可能原因 | 解决 |
 |------|---------|------|
-| 启动时报 "ANTHROPIC_API_KEY missing" | 密钥未配置 | 通过 UI 配置或设置环境变量 |
+| 启动时报 "DASHSCOPE_API_KEY missing" | 密钥未配置 | 通过 UI 配置或设置环境变量 |
 | 语音按钮无反应 | 系统未授予麦克风权限 | 在系统设置中授权 |
 | 翻译速度慢 (>1s) | 网络延迟 | 检查网络；未来版本将支持本地缓存 |
 | TTS 无声音 | 系统音量/输出设备问题 | 检查音频输出 |

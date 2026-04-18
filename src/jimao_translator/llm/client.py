@@ -41,5 +41,5 @@ class LlmClient(Protocol):
 
     @property
     def provider_name(self) -> str:
-        """e.g., 'anthropic-claude'."""
+        """e.g., 'qwen:qwen-plus'."""
         ...

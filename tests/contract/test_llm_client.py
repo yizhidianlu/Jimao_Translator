@@ -1,4 +1,4 @@
-"""T300: LlmClient contract tests (9 cases from contracts/llm-client.md)."""
+"""T300: LlmClient contract tests (verified against MockLlmClient + QwenLlmClient)."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from jimao_translator.exceptions import (
     LlmUnavailableError,
 )
 from jimao_translator.llm.client import LlmClient
-from jimao_translator.llm.providers.anthropic_client import AnthropicLlmClient
 from jimao_translator.llm.providers.mock import MockLlmClient
+from jimao_translator.llm.providers.qwen_client import QwenLlmClient
 from jimao_translator.models.chat import ChatConversation, ChatMessage
 from jimao_translator.models.enums import MessageRole
 
@@ -23,38 +23,35 @@ def _conv(*pairs: tuple[MessageRole, str]) -> ChatConversation:
     return ChatConversation(messages=[ChatMessage(role=r, content=c) for r, c in pairs])
 
 
-class _FakeStreamCtx:
-    def __init__(self, chunks: list[str]) -> None:
-        self._chunks = chunks
-
-    async def __aenter__(self) -> _FakeStreamCtx:
-        return self
-
-    async def __aexit__(self, *_args: object) -> None:
-        return None
-
-    @property
-    def text_stream(self):
-        async def _gen():
-            for c in self._chunks:
-                yield c
-
-        return _gen()
+async def _async_iter(items: list[object]):
+    for item in items:
+        yield item
 
 
-def _anthropic_with_stream(chunks: list[str]) -> AnthropicLlmClient:
-    client = MagicMock()
-    client.messages = MagicMock()
-    client.messages.stream = MagicMock(return_value=_FakeStreamCtx(chunks))
-    client.messages.create = AsyncMock(
-        return_value=SimpleNamespace(content=[SimpleNamespace(text="".join(chunks))])
+def _qwen_with_stream(chunks: list[str]) -> QwenLlmClient:
+    """Build a QwenLlmClient whose underlying SDK yields OpenAI-style stream chunks."""
+    chunk_objs = [
+        SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content=c))]) for c in chunks
+    ]
+    non_stream_response = SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content="".join(chunks)))]
     )
-    return AnthropicLlmClient(api_key="sk-test", client=client)
+
+    async def _create(**kwargs: object):
+        if kwargs.get("stream"):
+            return _async_iter(chunk_objs)
+        return non_stream_response
+
+    client = MagicMock()
+    client.chat = MagicMock()
+    client.chat.completions = MagicMock()
+    client.chat.completions.create = _create
+    return QwenLlmClient(api_key="sk-test", client=client)
 
 
 class TestLlmClientContract:
-    """Full contract surface — verified against MockLlmClient; AnthropicLlmClient
-    also exercised for streaming + error mapping (tests 4, 5, 6)."""
+    """Full contract surface — verified against MockLlmClient; QwenLlmClient
+    also exercised for streaming + error mapping."""
 
     async def test_chat_yields_deltas_when_stream_true(self) -> None:
         llm = MockLlmClient(reply="Hello world", chunks=3)
@@ -80,16 +77,15 @@ class TestLlmClientContract:
                 pass
 
     async def test_chat_raises_authentication_error_on_invalid_key(self) -> None:
-        class _SdkAuthError(Exception):
+        class FakeAuthenticationError(Exception):
             pass
 
         client = MagicMock()
-        client.messages = MagicMock()
-        client.messages.stream = MagicMock(side_effect=_SdkAuthError("invalid"))
-        llm = AnthropicLlmClient(api_key="sk-x", client=client)
+        client.chat = MagicMock()
+        client.chat.completions = MagicMock()
+        client.chat.completions.create = AsyncMock(side_effect=FakeAuthenticationError("invalid"))
+        llm = QwenLlmClient(api_key="sk-x", client=client)
         conv = _conv((MessageRole.USER, "hi"))
-        # Rename class to trigger AuthenticationError mapping
-        _SdkAuthError.__name__ = "AuthenticationError"
         with pytest.raises(AuthenticationError):
             async for _ in llm.chat(conv):
                 pass
@@ -114,13 +110,13 @@ class TestLlmClientContract:
 
     async def test_provider_name_is_non_empty(self) -> None:
         assert MockLlmClient().provider_name
-        assert AnthropicLlmClient(api_key="sk-x", client=MagicMock()).provider_name
+        assert QwenLlmClient(api_key="sk-x", client=MagicMock()).provider_name
 
     async def test_runtime_checkable_protocol(self) -> None:
         assert isinstance(MockLlmClient(), LlmClient)
 
-    async def test_anthropic_streams_deltas(self) -> None:
-        llm = _anthropic_with_stream(["Hel", "lo", " world"])
+    async def test_qwen_streams_deltas(self) -> None:
+        llm = _qwen_with_stream(["Hel", "lo", " world"])
         conv = _conv((MessageRole.USER, "hi"))
         deltas = [c async for c in llm.chat(conv, stream=True)]
         assert deltas == ["Hel", "lo", " world"]
