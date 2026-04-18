@@ -17,7 +17,7 @@ from .provider import TranslationProvider
 
 logger = logging.getLogger(__name__)
 
-_MAX_SOURCE_TEXT = 5000
+MAX_SOURCE_TEXT = 5000
 
 
 class TranslationService:
@@ -45,10 +45,15 @@ class TranslationService:
     ) -> TranslationResult:
         if not source_text or not source_text.strip():
             raise ValueError("source_text must not be empty")
-        if len(source_text) > _MAX_SOURCE_TEXT:
-            raise ValueError(f"source_text exceeds {_MAX_SOURCE_TEXT} chars")
         if target_language is LanguageCode.AUTO:
             raise ValueError("target_language cannot be 'auto'")
+        if len(source_text) > MAX_SOURCE_TEXT:
+            logger.warning(
+                "source_text length %d exceeds %d — truncating",
+                len(source_text),
+                MAX_SOURCE_TEXT,
+            )
+            source_text = source_text[:MAX_SOURCE_TEXT]
 
         resolved_source = source_language
         if resolved_source is LanguageCode.AUTO:

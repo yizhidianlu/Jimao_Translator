@@ -40,11 +40,12 @@ class TestEmptyTextValidation:
                 mode=TranslationMode.TEXT,
             )
 
-    async def test_oversize_text_raises(self, service: TranslationService) -> None:
-        with pytest.raises(ValueError):
-            await service.translate(
-                source_text="x" * 5001,
-                source_language=LanguageCode.EN,
-                target_language=LanguageCode.ZH,
-                mode=TranslationMode.TEXT,
-            )
+    async def test_oversize_text_is_truncated(self, service: TranslationService) -> None:
+        # Per T422: oversized input is truncated to MAX_SOURCE_TEXT, not rejected.
+        result = await service.translate(
+            source_text="x" * 5500,
+            source_language=LanguageCode.EN,
+            target_language=LanguageCode.ZH,
+            mode=TranslationMode.TEXT,
+        )
+        assert result.translated_text

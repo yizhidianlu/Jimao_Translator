@@ -23,8 +23,9 @@ python -m venv .venv
 # macOS / Linux:
 source .venv/bin/activate
 
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+pip install -e .
+# 可选（开发者）：
+pip install pytest pytest-asyncio pytest-cov pytest-qt ruff psutil
 ```
 
 ## 配置 API 密钥
@@ -44,7 +45,9 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 ## 启动应用
 
 ```bash
-python -m jimao_translator
+jimao-translator
+# 或直接运行入口脚本：
+python -m jimao_translator.main
 ```
 
 启动后：
@@ -105,10 +108,10 @@ ruff format .
 ## 打包
 
 ```bash
-pyinstaller --name JimaoTranslator --windowed src/jimao_translator/main.py
+pyinstaller packaging/jimao_translator.spec
 ```
 
-输出位于 `dist/JimaoTranslator/`，可直接分发。
+输出位于 `dist/jimao_translator/`，可直接分发。
 
 ## 故障排查
 

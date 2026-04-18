@@ -71,6 +71,7 @@ addopts = [
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "gui: marks tests requiring a Qt event loop",
+    "performance: marks budget/perf smoke tests",
 ]
 
 [tool.coverage.run]
